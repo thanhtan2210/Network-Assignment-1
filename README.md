@@ -54,7 +54,7 @@ Make sure you have Python 3.x installed. You can download Python from the offici
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/thanhtan2210/STA.git
+   git clone https://github.com/thanhtan2210/Network-Assignment-1.git
    cd STA
    ```
 
