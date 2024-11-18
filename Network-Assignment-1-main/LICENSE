@@ -1,0 +1,25 @@
+Certainly! Here's an example of a `LICENSE` file for your project. You can use the MIT License, which is one of the most commonly used open-source licenses.
+
+---
+
+## LICENSE
+
+MIT License
+
+Copyright (c) 2024 [thanhtan2210 or Organization]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is provided to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---
+
+### How to use:
+
+1. Replace `[thanhtan2210 or Organization]` with your actual name or the name of your organization.
+2. Include this file in the root of your project directory.
+3. This license gives others permission to freely use, modify, and distribute your software, but they must include the same license and copyright notice.
+
+Let me know if you need further modifications to this or additional files for your project!
