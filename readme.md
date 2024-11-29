@@ -104,5 +104,3 @@ Cấu trúc **STA** mà bạn cung cấp được thiết kế giống một **�
 - **Khả năng mở rộng**: Thêm peer, chia sẻ hoặc tải tệp đều dễ dàng mà không cần thay đổi cấu trúc chính.
 
 ---
-
-Nếu bạn cần chi tiết hoặc muốn cải thiện một phần cụ thể, hãy cho tôi biết! 😊
