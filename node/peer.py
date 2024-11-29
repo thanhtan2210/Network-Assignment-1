@@ -46,13 +46,6 @@ class Peer:
             print(f"Peer {self.peer_id} announced to tracker successfully.")
         else:
             print(f"Failed to announce to tracker: {response.status_code}")
-    
-    def download_file(self, ip, port, file_path):
-        """Tải tệp từ peer khác."""
-        try:
-            print(f"Downloading file from {ip}:{port} to {file_path}")
-        except Exception as e:
-            print(f"Download failed: {e}")
 
     def start_server(self):
         """Khởi chạy server để nhận kết nối từ các peer khác."""
@@ -98,4 +91,57 @@ class Peer:
             # Kết nối và gửi thông điệp
         except Exception as e:
             print(f"Error connecting to peer: {e}")
+            raise
+    
+    def download_file(self, file_name):
+        """
+        Tải file bằng tên tệp từ các peer.
+        """
+        try:
+            # Lấy danh sách các peer từ tracker
+            peers = self.get_peers()
+            if not peers:
+                raise Exception("No peers available to download the file.")
+
+            print(f"Peers available for download: {peers}")
+
+            # Thử tải file từ từng peer
+            for peer in peers:
+                peer_ip = peer.get("ip", "127.0.0.1")
+                peer_port = int(peer.get("port"))
+                peer_id = peer.get("peer_id", "Unknown")
+
+                print(f"Attempting to download {file_name} from peer {peer_id} at {peer_ip}:{peer_port}")
+
+                try:
+                    # Tạo socket để kết nối với peer
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                        s.settimeout(5)  # Đặt timeout cho kết nối
+                        s.connect((peer_ip, peer_port))
+
+                        # Gửi yêu cầu tải file
+                        request_data = f"DOWNLOAD {file_name}\n"
+                        s.sendall(request_data.encode("utf-8"))
+
+                        # Nhận dữ liệu tệp
+                        file_data = b""
+                        while True:
+                            chunk = s.recv(1024)
+                            if not chunk:
+                                break
+                            file_data += chunk
+
+                        # Lưu tệp đã tải xuống
+                        save_path = f"downloaded_{file_name}"
+                        with open(save_path, "wb") as f:
+                            f.write(file_data)
+
+                        print(f"File {file_name} downloaded successfully and saved to {save_path}")
+                        return save_path  # Kết thúc nếu tải thành công từ một peer
+                except Exception as e:
+                    print(f"Failed to download {file_name} from peer {peer_id} at {peer_ip}:{peer_port}: {e}")
+
+            raise Exception(f"Failed to download {file_name} from all peers.")
+        except Exception as e:
+            print(f"Download error: {e}")
             raise

@@ -1,12 +1,17 @@
 #ui.py
 
+
+import os
 import requests
 import tkinter as tk
+from tkinter import simpledialog
 from tkinter import filedialog, messagebox
 from threading import Thread
 import time
 from node.peer import Peer
 from torrent.create_torrent_file import create_torrent, generate_magnet
+from node.download import connect_to_tracker, download_from_peer
+from node.upload import upload_to_peer, share_file_with_peers
 
 # Biến toàn cục
 peers = []  # Danh sách các peer đang hoạt động
@@ -25,6 +30,9 @@ def announce(peer_instance):
         # Hiển thị thông báo thành công
         print(f"Peer {peer_instance.peer_id} on port {peer_instance.port} announced successfully!")
         messagebox.showinfo("Announce Success", f"Announced peer {peer_instance.peer_id} to tracker.")
+
+        # Cập nhật danh sách peer trong giao diện
+        update_peer_list_ui(peer_instance)
     except requests.exceptions.ConnectionError:
         print("Tracker server is not reachable. Please check if it's running.")
         messagebox.showerror("Connection Error", "Tracker server is not reachable. Check if it's running.")
@@ -35,10 +43,9 @@ def announce(peer_instance):
 # Kết nối tới peer được chọn
 def connect_to_selected_peer(peer_instance):
     selected = peer_list_box.get(tk.ACTIVE)
-    if not selected:
-        messagebox.showwarning("Connection Error", "Please select a peer.")
-        return
-
+    # if not selected:
+    #     messagebox.showwarning("Connection Error", "Please select a peer.")
+    #     return
     # Lấy giá trị port từ trường nhập
     port_input = port_entry.get().strip()
     if not port_input.isdigit():
@@ -89,21 +96,31 @@ def upload_file():
         magnet_link = generate_magnet(save_path)
         magnet_label.config(text=f"Magnet Link: {magnet_link}", wraplength=400)
         messagebox.showinfo("Upload Success", "Torrent file created successfully!")
+        upload_to_peer(peer_instance, file_path)
+
+        # Chia sẻ file với các peer
+        share_file_with_peers(peer_instance, file_path)
+
+        # Hiển thị thông báo thành công
+        messagebox.showinfo("Upload Success", f"File uploaded and shared successfully: {os.path.basename(file_path)}")
     except Exception as e:
         messagebox.showerror("Error", f"Failed to create torrent file: {e}")
 
-# Download file từ magnet link
+# Hàm download file không dùng magnet link
 def download_file(peer_instance):
-    magnet_link = magnet_entry.get().strip()
-    if not magnet_link:
-        messagebox.showwarning("Download Error", "Please enter a valid magnet link.")
+    # Hiển thị hộp thoại để người dùng nhập tên file
+    file_name = simpledialog.askstring("File Name", "Enter the name of the file to download:")
+    if not file_name:
+        messagebox.showwarning("Download Error", "Please enter a valid file name.")
         return
 
     try:
-        peer_instance.download_from_magnet(magnet_link)
-        messagebox.showinfo("Download Success", f"Download started for: {magnet_link}")
+        # Gọi hàm download từ peer_instance
+        peer_instance.download_file(file_name)
+        messagebox.showinfo("Download Success", f"Download started for file: {file_name}")
     except Exception as e:
-        messagebox.showerror("Error", f"Failed to start download: {e}")
+        messagebox.showerror("Download Error", f"Failed to start download: {e}")
+
 
 # UI chính
 def start_ui(peer_instance):
@@ -114,7 +131,11 @@ def start_ui(peer_instance):
 
     tk.Label(root, text=f"Peer {peer_instance.peer_id}", font=("Arial", 14)).pack(pady=10)
 
-    announce_button = tk.Button(root, text="Announce to Tracker", command=lambda: announce(peer_instance))
+    announce_button = tk.Button(
+        root, 
+        text="Announce to Tracker", 
+        command=lambda: announce(peer_instance)
+    )
     announce_button.pack(pady=5)
 
     peer_list_box = tk.Listbox(root, width=50)
@@ -131,10 +152,6 @@ def start_ui(peer_instance):
     upload_button = tk.Button(root, text="Upload File", command=upload_file)
     upload_button.pack(pady=5)
 
-    tk.Label(root, text="Magnet Link:").pack()
-    magnet_entry = tk.Entry(root, width=50)
-    magnet_entry.pack(pady=5)
-
     download_button = tk.Button(root, text="Download File", command=lambda: download_file(peer_instance))
     download_button.pack(pady=5)
 
@@ -144,6 +161,7 @@ def start_ui(peer_instance):
     # Khởi động danh sách peer cập nhật liên tục
     Thread(target=update_peer_list_ui, args=(peer_instance,), daemon=True).start()
     root.mainloop()
+
 
 
 # Cập nhật danh sách peer trong giao diện
@@ -163,6 +181,7 @@ def update_peer_list_ui(peer_instance):
                     port = peer["port"]
                     peer_list_box.insert(tk.END, f"{peer_id} (127.0.0.1:{port})")
             else:
+                peer_list_box.insert(tk.END, "No peers available")
                 print("No peers found in the response.")
         else:
             print(f"Failed to fetch peers: {response.status_code} - {response.text}")

@@ -64,5 +64,4 @@ def generate_magnet(torrent_file_path):
     # Tạo magnet link
     tracker_url = torrent_data[b'announce'].decode("utf-8")
     magnet_link = f"magnet:?xt=urn:btih:{info_hash}&dn={file_name}&tr={tracker_url}"
-
     return magnet_link

@@ -2,6 +2,7 @@
 
 import socket
 import threading
+import os
 
 BUFFER_SIZE = 1024
 
@@ -33,3 +34,27 @@ def serve_pieces(port, file_path):
     while True:
         client_socket, _ = server_socket.accept()
         threading.Thread(target=handle_request, args=(client_socket,), daemon=True).start()
+
+def upload_to_peer(peer_instance, file_path):
+    """
+    Upload a file to the current peer's storage.
+    """
+    # Lấy tên file
+    file_name = os.path.basename(file_path)
+
+    # Copy file vào thư mục chia sẻ (ví dụ: shared_folder)
+    shared_folder = "shared_files"  # Thư mục chia sẻ trên peer
+    os.makedirs(shared_folder, exist_ok=True)
+    destination_path = os.path.join(shared_folder, file_name)
+    with open(file_path, "rb") as src, open(destination_path, "wb") as dst:
+        dst.write(src.read())
+
+    print(f"File {file_name} uploaded to {shared_folder} successfully.")
+
+def share_file_with_peers(peer_instance, file_path):
+    """
+    Notify other peers about the uploaded file.
+    """
+    file_name = os.path.basename(file_path)
+    peer_instance.share_file(file_name)  # Gọi hàm chia sẻ trong lớp Peer
+    print(f"File {file_name} shared with peers.")
