@@ -20,7 +20,6 @@ def announce():
     if not peer_id or not port or not info_hash:
         return "Missing required parameters", 400
 
-    # Lưu thông tin peer vào danh sách peers
     peer = {"peer_id": peer_id, "port": port, "info_hash": info_hash}
     if peer not in peers:
         peers.append(peer)
@@ -28,9 +27,6 @@ def announce():
     return "Announced successfully", 200
 
 def cleanup_peers():
-    """
-    Xóa các peer không hoạt động.
-    """
     while True:
         current_time = time.time()
         for info_hash, torrent in list(torrent_db.items()):
@@ -39,12 +35,8 @@ def cleanup_peers():
             ]
         time.sleep(5)
 
-
 @app.route("/peers", methods=["GET"])
 def get_peers():
-    """
-    Trả về danh sách các peer.
-    """
     return jsonify({"peers": peers})
 
 

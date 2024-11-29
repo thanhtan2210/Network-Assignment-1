@@ -43,19 +43,14 @@ def announce(peer_instance):
 # Kết nối tới peer được chọn
 def connect_to_selected_peer(peer_instance):
     selected = peer_list_box.get(tk.ACTIVE)
-    # if not selected:
-    #     messagebox.showwarning("Connection Error", "Please select a peer.")
-    #     return
-    # Lấy giá trị port từ trường nhập
     port_input = port_entry.get().strip()
     if not port_input.isdigit():
         messagebox.showwarning("Invalid Port", "Please enter a valid port number.")
         return
 
-    port = int(port_input)  # Chuyển port thành số nguyên
+    port = int(port_input)
 
     try:
-        # Chia tách peer_id từ chuỗi trong Listbox (giả sử cấu trúc peer_id (127.0.0.1:port))
         peer_id = selected.split(" (127.0.0.1:")[0]
         peer_instance.connect_to_peer("127.0.0.1", port, "Hello, Peer!")
         messagebox.showinfo("Connection Success", f"Connected to peer {peer_id} on port {port}.")
@@ -98,34 +93,28 @@ def upload_file():
         messagebox.showinfo("Upload Success", "Torrent file created successfully!")
         upload_to_peer(peer_instance, file_path)
 
-        # Chia sẻ file với các peer
         share_file_with_peers(peer_instance, file_path)
 
-        # Hiển thị thông báo thành công
         messagebox.showinfo("Upload Success", f"File uploaded and shared successfully: {os.path.basename(file_path)}")
     except Exception as e:
         messagebox.showerror("Error", f"Failed to create torrent file: {e}")
 
-# Hàm download file không dùng magnet link
 def download_file(peer_instance):
-    # Hiển thị hộp thoại để người dùng nhập tên file
     file_name = simpledialog.askstring("File Name", "Enter the name of the file to download:")
     if not file_name:
         messagebox.showwarning("Download Error", "Please enter a valid file name.")
         return
 
     try:
-        # Gọi hàm download từ peer_instance
-        file_data = peer_instance.download_file(file_name)  # Lấy dữ liệu file từ peer
-        if isinstance(file_data, str) and file_data.startswith("Error"):  # Kiểm tra lỗi
+        file_data = peer_instance.download_file(file_name)
+        if isinstance(file_data, str) and file_data.startswith("Error"): 
             messagebox.showerror("Download Error", file_data)
         else:
-            # Nếu file đã được tải về, lưu vào thư mục
             shared_folder = "./shared_files"
             os.makedirs(shared_folder, exist_ok=True)
             file_path = os.path.join(shared_folder, file_name)
             with open(file_path, "wb") as f:
-                f.write(file_data)  # Lưu dữ liệu file vào đĩa
+                f.write(file_data)
 
             messagebox.showinfo("Download Success", f"Download successful for file: {file_name}")
     except Exception as e:
