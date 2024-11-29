@@ -1,5 +1,6 @@
 #peer.py
 
+import os
 import socket
 import threading
 import hashlib
@@ -14,6 +15,13 @@ class Peer:
         self.port = port
         self.tracker_url = tracker_url
         self.peers = []
+        self.shared_file = []  # Thực sự thêm file vào đây
+
+    def add_shared_file(self, file_name):
+        """Thêm file vào danh sách các file chia sẻ của peer."""
+        if file_name not in self.shared_file:
+            self.shared_file.append(file_name)
+            print(f"File {file_name} added to shared files.")
 
         # Thiết lập retry cho các request HTTP
         self.session = requests.Session()
@@ -63,9 +71,19 @@ class Peer:
         try:
             data = client_socket.recv(1024).decode()
             print(f"Received from peer: {data}")
-            client_socket.send(f"Hello from {self.peer_id}".encode())
+
+            # Kiểm tra nếu yêu cầu tải file
+            if data.startswith("DOWNLOAD"):
+                file_name = data.split(" ")[1]  # Tên file được yêu cầu tải
+                self.download_file(file_name, client_socket)
+            else:
+                client_socket.send(f"Unknown request: {data}".encode())
+        except Exception as e:
+            print(f"Error handling client: {e}")
+            client_socket.send(f"Error: {e}".encode())
         finally:
             client_socket.close()
+
             
             
     def get_peers(self):
@@ -95,53 +113,25 @@ class Peer:
     
     def download_file(self, file_name):
         """
-        Tải file bằng tên tệp từ các peer.
+        Tải file từ thư mục shared_files và gửi cho peer yêu cầu.
         """
+        shared_folder = "./shared_files"
+        file_path = os.path.join(shared_folder, file_name)
+        
+        # Kiểm tra xem file có tồn tại không
+        if not os.path.exists(file_path):
+            print(f"File {file_name} not found in shared folder.")
+            return "File not found"  # Trả về thông báo lỗi
+    
+        # Đọc file và gửi dữ liệu cho peer
         try:
-            # Lấy danh sách các peer từ tracker
-            peers = self.get_peers()
-            if not peers:
-                raise Exception("No peers available to download the file.")
-
-            print(f"Peers available for download: {peers}")
-
-            # Thử tải file từ từng peer
-            for peer in peers:
-                peer_ip = peer.get("ip", "127.0.0.1")
-                peer_port = int(peer.get("port"))
-                peer_id = peer.get("peer_id", "Unknown")
-
-                print(f"Attempting to download {file_name} from peer {peer_id} at {peer_ip}:{peer_port}")
-
-                try:
-                    # Tạo socket để kết nối với peer
-                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                        s.settimeout(5)  # Đặt timeout cho kết nối
-                        s.connect((peer_ip, peer_port))
-
-                        # Gửi yêu cầu tải file
-                        request_data = f"DOWNLOAD {file_name}\n"
-                        s.sendall(request_data.encode("utf-8"))
-
-                        # Nhận dữ liệu tệp
-                        file_data = b""
-                        while True:
-                            chunk = s.recv(1024)
-                            if not chunk:
-                                break
-                            file_data += chunk
-
-                        # Lưu tệp đã tải xuống
-                        save_path = f"downloaded_{file_name}"
-                        with open(save_path, "wb") as f:
-                            f.write(file_data)
-
-                        print(f"File {file_name} downloaded successfully and saved to {save_path}")
-                        return save_path  # Kết thúc nếu tải thành công từ một peer
-                except Exception as e:
-                    print(f"Failed to download {file_name} from peer {peer_id} at {peer_ip}:{peer_port}: {e}")
-
-            raise Exception(f"Failed to download {file_name} from all peers.")
+            with open(file_path, "rb") as f:
+                file_data = f.read()
+    
+            # Gửi dữ liệu file cho peer
+            print(f"Sending file {file_name}...")
+            return file_data  # Trả về dữ liệu file cho peer hoặc client
+    
         except Exception as e:
-            print(f"Download error: {e}")
-            raise
+            print(f"Error reading or sending file {file_name}: {e}")
+            return f"Error: {e}"  # Trả về lỗi nếu có

@@ -116,8 +116,18 @@ def download_file(peer_instance):
 
     try:
         # Gọi hàm download từ peer_instance
-        peer_instance.download_file(file_name)
-        messagebox.showinfo("Download Success", f"Download started for file: {file_name}")
+        file_data = peer_instance.download_file(file_name)  # Lấy dữ liệu file từ peer
+        if isinstance(file_data, str) and file_data.startswith("Error"):  # Kiểm tra lỗi
+            messagebox.showerror("Download Error", file_data)
+        else:
+            # Nếu file đã được tải về, lưu vào thư mục
+            shared_folder = "./shared_files"
+            os.makedirs(shared_folder, exist_ok=True)
+            file_path = os.path.join(shared_folder, file_name)
+            with open(file_path, "wb") as f:
+                f.write(file_data)  # Lưu dữ liệu file vào đĩa
+
+            messagebox.showinfo("Download Success", f"Download successful for file: {file_name}")
     except Exception as e:
         messagebox.showerror("Download Error", f"Failed to start download: {e}")
 

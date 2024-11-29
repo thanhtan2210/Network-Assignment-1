@@ -3,6 +3,7 @@
 import socket
 import threading
 import json
+import os
 
 BUFFER_SIZE = 1024
 
@@ -18,34 +19,28 @@ def connect_to_tracker(tracker_host, tracker_port):
         print(f"Failed to connect to tracker: {e}")
         return []
 
-def download_from_peer(peer_ip, peer_port, piece_index):
+def download_from_peer(peer_ip, peer_port, file_name):
     """Tải dữ liệu từ peer khác."""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((peer_ip, peer_port))
-            s.sendall(f"REQUEST_PIECE {piece_index}".encode())  # Yêu cầu tải mảnh dữ liệu
-            data = s.recv(BUFFER_SIZE)
-            with open(f"piece_{piece_index}.dat", "wb") as f:
-                f.write(data)  # Lưu mảnh tải về vào file
-            print(f"Downloaded piece {piece_index} from {peer_ip}:{peer_port}")
+            s.sendall(f"REQUEST_FILE {file_name}".encode())  # Yêu cầu tải file
+
+            # Nhận dữ liệu file
+            file_data = s.recv(1024)
+            full_file_data = b""
+            
+            while file_data:
+                full_file_data += file_data
+                file_data = s.recv(1024)
+
+            # Lưu file vào thư mục shared_files
+            shared_folder = "./shared_files"
+            os.makedirs(shared_folder, exist_ok=True)
+            file_path = os.path.join(shared_folder, file_name)
+            with open(file_path, "wb") as f:
+                f.write(full_file_data)
+
+            print(f"Downloaded {file_name} from {peer_ip}:{peer_port}")
     except socket.error as e:
-        print(f"Failed to download piece {piece_index} from {peer_ip}:{peer_port}: {e}")
-
-def start_download(tracker_host, tracker_port):
-    """Khởi động quá trình tải từ các peer."""
-    peer_list = connect_to_tracker(tracker_host, tracker_port)
-    if not peer_list:
-        print("No peers found from the tracker.")
-        return
-
-    threads = []
-    for piece_index, peer in enumerate(peer_list):
-        peer_ip, peer_port = peer.get('ip'), peer.get('port')
-        if peer_ip and peer_port:
-            t = threading.Thread(target=download_from_peer, args=(peer_ip, peer_port, piece_index))
-            t.start()
-            threads.append(t)
-
-    for t in threads:
-        t.join()  # Đợi tất cả các thread tải xuống hoàn thành
-    print("Download completed.")
+        print(f"Failed to download {file_name} from {peer_ip}:{peer_port}: {e}")
