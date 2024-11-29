@@ -1,0 +1,10 @@
+This is an example file for testing torrent creation and file-sharing systems.  
+It contains multiple lines of text to simulate a real-world file.  
+
+Line 1: Hello, world!  
+Line 2: Testing torrent functionality.  
+Line 3: Python is awesome!  
+Line 4: Multi-directional data transfer is a great feature.  
+Line 5: Let's share and download files efficiently.  
+
+End of file.
