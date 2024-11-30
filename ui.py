@@ -100,23 +100,17 @@ def upload_file():
         messagebox.showerror("Error", f"Failed to create torrent file: {e}")
 
 def download_file(peer_instance):
-    file_name = simpledialog.askstring("File Name", "Enter the name of the file to download:")
-    if not file_name:
-        messagebox.showwarning("Download Error", "Please enter a valid file name.")
+    torrent_file_path = filedialog.askopenfilename(title="Select Torrent File")
+    if not torrent_file_path:
+        messagebox.showwarning("Download Error", "Please select a torrent file.")
         return
 
     try:
-        file_data = peer_instance.download_file(file_name)
-        if isinstance(file_data, str) and file_data.startswith("Error"): 
-            messagebox.showerror("Download Error", file_data)
+        downloaded_file_path = peer_instance.download_file(torrent_file_path)
+        if downloaded_file_path.startswith("Error"):  # Kiểm tra nếu có lỗi
+            messagebox.showerror("Download Error", downloaded_file_path)
         else:
-            shared_folder = "./shared_files"
-            os.makedirs(shared_folder, exist_ok=True)
-            file_path = os.path.join(shared_folder, file_name)
-            with open(file_path, "wb") as f:
-                f.write(file_data)
-
-            messagebox.showinfo("Download Success", f"Download successful for file: {file_name}")
+            messagebox.showinfo("Download Success", f"Download completed: {downloaded_file_path}")
     except Exception as e:
         messagebox.showerror("Download Error", f"Failed to start download: {e}")
 

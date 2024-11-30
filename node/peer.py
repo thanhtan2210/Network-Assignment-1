@@ -1,6 +1,8 @@
 #peer.py
 
 import os
+import libtorrent as lt
+import time
 import socket
 import threading
 import hashlib
@@ -95,20 +97,35 @@ class Peer:
             print(f"Error connecting to peer: {e}")
             raise
     
-    def download_file(self, file_name):
-        shared_folder = "./shared_files"
-        file_path = os.path.join(shared_folder, file_name)
-
-        if not os.path.exists(file_path):
-            print(f"File {file_name} not found in shared folder.")
-            return "File not found"
+    def download_file(self, torrent_file_path):
+        # Yêu cầu người dùng chọn thư mục lưu
+        save_folder = filedialog.askdirectory(title="Select Folder to Save Downloaded File")
+        if not save_folder:
+            messagebox.showwarning("Download Error", "Please select a folder to save the file.")
+            return
 
         try:
-            with open(file_path, "rb") as f:
-                file_data = f.read()
-            print(f"Sending file {file_name}...")
-            return file_data 
+            os.makedirs(save_folder, exist_ok=True)  # Tạo thư mục nếu chưa tồn tại
 
+            # Tạo session và tải torrent bằng libtorrent
+            ses = lt.session()
+
+            # Đọc torrent file
+            info = lt.torrent_info(torrent_file_path)
+
+            # Tạo handle và bắt đầu tải torrent
+            h = ses.add_torrent({'ti': info, 'save_path': save_folder})
+
+            print(f"Downloading {torrent_file_path} to {save_folder}...")
+
+            # Theo dõi tiến trình tải xuống
+            while not h.is_seed():
+                s = h.status()
+                print(f"{s.status} ({s.download_rate / 1000:.1f} kB/s) {s.total_download / 1000:.1f} kB")
+                time.sleep(1)
+
+            print(f"Download of {torrent_file_path} completed.")
+            return os.path.join(save_folder, info.name())  # Trả về đường dẫn file đã tải xuống
         except Exception as e:
-            print(f"Error reading or sending file {file_name}: {e}")
-            return f"Error: {e}" 
+            print(f"Error downloading file from torrent: {e}")
+            return f"Error: {e}"
