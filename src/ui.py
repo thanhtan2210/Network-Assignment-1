@@ -8,10 +8,7 @@ from tkinter import simpledialog
 from tkinter import filedialog, messagebox
 from threading import Thread
 import time
-from node.peer import Peer
-from torrent.create_torrent_file import create_torrent, generate_magnet
-from node.download import connect_to_tracker, download_from_peer
-from node.upload import upload_to_peer, share_file_with_peers
+from node import Node
 
 # Biến toàn cục
 peers = []  # Danh sách các peer đang hoạt động
@@ -20,12 +17,8 @@ tracker_url = "http://127.0.0.1:8000"  # URL của tracker server
 # Hàm thông báo với tracker
 def announce(peer_instance):
     try:
-        # Đường dẫn file torrent
-        torrent_file_path = "D:/Bon Bon/project 1/git/STA/torrent/output.txt"
-        info_hash = peer_instance.get_info_hash(torrent_file_path)
-
         # Gửi thông tin peer tới tracker
-        peer_instance.announce_to_tracker(info_hash)
+        peer_instance.announce_to_tracker()
 
         # Hiển thị thông báo thành công
         print(f"Peer {peer_instance.peer_id} on port {peer_instance.port} announced successfully!")
@@ -87,13 +80,10 @@ def upload_file():
         return
 
     try:
-        create_torrent(file_path, tracker_url, save_path)
-        magnet_link = generate_magnet(save_path)
+        Node.create_torrent(file_path, tracker_url, save_path)
+        magnet_link = Node.generate_magnet(save_path)
         magnet_label.config(text=f"Magnet Link: {magnet_link}", wraplength=400)
         messagebox.showinfo("Upload Success", "Torrent file created successfully!")
-        upload_to_peer(peer_instance, file_path)
-
-        share_file_with_peers(peer_instance, file_path)
 
         messagebox.showinfo("Upload Success", f"File uploaded and shared successfully: {os.path.basename(file_path)}")
     except Exception as e:
@@ -195,7 +185,7 @@ if __name__ == "__main__":
         except ValueError:
             print("Invalid input. Peer Port must be a number. Please try again.")
 
-    peer_instance = Peer(peer_id, peer_port, tracker_url)
+    peer_instance = Node(peer_id, peer_port, tracker_url)
 
     # Khởi chạy heartbeat
     Thread(target=send_heartbeat, args=(peer_instance,), daemon=True).start()

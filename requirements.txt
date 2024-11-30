@@ -10,22 +10,14 @@ psutil==5.9.0
 # For structured logging and console output
 loguru==0.6.0
 
-# For cryptographic hashing (useful for creating unique IDs for pieces)
-hashlib
-
 # For command-line parsing (if needed)
 argparse
 
 # For data serialization (JSON handling)
 simplejson==3.17.6
 
-Flask
-
 jsonify
 
 bencodepy
 
-tkinter
-
-time
-
+libtorrent
